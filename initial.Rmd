@@ -1,0 +1,19 @@
+---
+title: "Work"
+output: pdf_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+vb <- read_xls(~)
+setwd("C:")
+vb<-read.csv(file='~/Vb-Work/Volleyball stats_ 2021 - AGGREGATE.csv')
+
+summary(vb)
+```
+
