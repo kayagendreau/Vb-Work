@@ -10,15 +10,12 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r}
-# vb <- read_xls(~)
-# setwd("C:")
-# vb<-read.csv(file='~/Vb-Work/Volleyball stats_ 2021 - AGGREGATE.csv')
+vb2<-read_csv("C:/Users/kayag/Downloads/Volleyball stats_ 2021 - AGGREGATE (2).csv")
 
 library(readr)
 library(dplyr)
-vb <- read_csv("C:/Users/kayag/Downloads/Volleyball stats_ 2021 - AGGREGATE (1).csv")
-vb <- readRDS(file= "~/Vb-Work/vb.rds")
-View(vb)
+
+saveRDS(vb2, file="~/Vb-Work/vb2.rds")
 
 
 ## Dig to kill work
