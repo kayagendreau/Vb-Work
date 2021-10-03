@@ -17,7 +17,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(readr)
 library(dplyr)
 vb <- read_csv("C:/Users/kayag/Downloads/Volleyball stats_ 2021 - AGGREGATE (1).csv")
-
+vb <- readRDS(file= "~/Vb-Work/vb.rds")
 View(vb)
 
 
