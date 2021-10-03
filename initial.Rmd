@@ -10,10 +10,42 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r}
-vb <- read_xls(~)
-setwd("C:")
-vb<-read.csv(file='~/Vb-Work/Volleyball stats_ 2021 - AGGREGATE.csv')
+# vb <- read_xls(~)
+# setwd("C:")
+# vb<-read.csv(file='~/Vb-Work/Volleyball stats_ 2021 - AGGREGATE.csv')
 
-summary(vb)
+library(readr)
+library(dplyr)
+vb <- read_csv("C:/Users/kayag/Downloads/Volleyball stats_ 2021 - AGGREGATE (1).csv")
+
+View(vb)
+
+
+## Dig to kill work
+
+vb %>%
+  group_by(dig) %>%
+  summarise(count=n())
+
+#about 37% of our hits come off of a dig (when the other team attacks the ball, including setter dumps). 747 counted digs. 
+
+vb %>%
+  group_by(dig) %>%
+  filter(hit=="kill") %>%
+  summarise(kill.count=n())
+
+vb %>%
+  group_by(dig) %>%
+  filter(hit=="attempt") %>%
+  summarise(att.count=n())
+
+vb %>%
+  group_by(dig) %>%
+  filter(hit=="error") %>%
+  summarise(err.count=n())
+
+#Given that a ball was dug, based off of these stats, 15% chance it will be an error. 52% chance it will be an attempt. 32% it will be a kill. Compare this to when a ball is not dug: 18% chance it will be an error. 45% chance it will be an attempt. 37% chance it will be a kill. Not too far off?
+
+# try to see if there is a threshold (when we win, what is our dig to kill?)
 ```
 
