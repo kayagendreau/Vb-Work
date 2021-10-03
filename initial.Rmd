@@ -12,10 +12,12 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 vb2<-read_csv("C:/Users/kayag/Downloads/Volleyball stats_ 2021 - AGGREGATE (2).csv")
 
+vb3 <- read_csv("C:/Users/kayag/Downloads/Volleyball stats_ 2021 - AGGREGATE (3).csv")
+
 library(readr)
 library(dplyr)
 
-saveRDS(vb2, file="~/Vb-Work/vb2.rds")
+saveRDS(vb3, file="~/Vb-Work/vb3.rds")
 
 
 ## Dig to kill work
@@ -27,22 +29,44 @@ vb %>%
 #about 37% of our hits come off of a dig (when the other team attacks the ball, including setter dumps). 747 counted digs. 
 
 vb %>%
-  group_by(dig) %>%
-  filter(hit=="kill") %>%
-  summarise(kill.count=n())
-
-vb %>%
-  group_by(dig) %>%
-  filter(hit=="attempt") %>%
-  summarise(att.count=n())
-
-vb %>%
-  group_by(dig) %>%
-  filter(hit=="error") %>%
-  summarise(err.count=n())
+  group_by(dig, hit) %>%
+  summarise(all=n())
 
 #Given that a ball was dug, based off of these stats, 15% chance it will be an error. 52% chance it will be an attempt. 32% it will be a kill. Compare this to when a ball is not dug: 18% chance it will be an error. 45% chance it will be an attempt. 37% chance it will be a kill. Not too far off?
 
 # try to see if there is a threshold (when we win, what is our dig to kill?)
+
+ggplot(vb2) +
+  geom_bar(aes(x=dig, fill=hit), position="fill") + scale_fill_manual("legend", values = c("kill" = "black", "attempt" = "gold", "error" = "grey"))
+
+
+
+
+
+
+x <- count
+
+m <- polr(as.factor(hit2) ~ dig + set + points.total, data = vb2, Hess=TRUE)
+
+summary(m)
+
+summary(as.factor(vb2$hit2))
+
+vb2$hit2 <- factor(vb2$hit, levels = c("error", "attempt", "kill"))
+sizes
+
+summary(vb$hit2)
+
+## points total vs. avg points position
+vb3 %>% 
+  group_by(points.total) %>% 
+  summarise(average.pt.position=mean(points.position)) %>% 
+  ggplot() +
+  geom_point(aes(x=points.total, y=average.pt.position)) +
+  ylim(-5,4) +
+  geom_smooth(aes(x=points.total, y=average.pt.position), span=.2)
+
+mean(vb3$points.position)
+
 ```
 
