@@ -19,7 +19,7 @@ library(dplyr)
 
 saveRDS(vb3, file="~/Vb-Work/vb3.rds")
 
-
+vb <- readRDS(file="~/Vb-Work/vb3.rds")
 ## Dig to kill work
 
 vb %>%
@@ -36,11 +36,13 @@ vb %>%
 
 # try to see if there is a threshold (when we win, what is our dig to kill?)
 
-vb3$hit <- factor(vb3$hit, levels = c("error", "attempt", "kill"))
+vb$hit <- factor(vb$hit, levels = c("error", "attempt", "kill"))
 
-ggplot(vb3) +
+ggplot(vb) +
   geom_bar(aes(x=dig, fill=hit), position="fill") + scale_fill_manual("legend", values = c("kill" = "orange3", "attempt" = "gray100", "error" = "black"))
 
+ggplot(vb) +
+  geom_bar(aes(x=oss, fill=hit), position="fill") + scale_fill_manual("legend", values = c("kill" = "orange3", "attempt" = "gray100", "error" = "black"))
 
 
 
@@ -71,3 +73,43 @@ mean(vb3$points.position)
 
 ```
 
+```{r}
+#EDA
+
+ggplot(data = vb, aes(hit)) +
+  geom_histogram(stat = "count")
+
+ggplot(data = vb) +
+  geom_bar(aes(oss, fill = as.character(hit)), position = "fill")
+
+ggplot(data = vb, aes(dig, fill = hit)) +
+  geom_histogram(stat = "count")
+
+vb %>% group_by(dig) %>% summarise(n())
+
+
+ggplot(data = vb, aes(hit, )) +
+  geom_histogram(stat = "count")
+
+vb.lm <- lm(hit ~ dig, data = vb)
+summary(vb.lm)
+
+ggplot(data = vb, aes(points.position)) +
+  geom_histogram()
+
+ggplot(data = vb, aes(x = points.total, y = mean(points.position))) +
+  geom_point()
+
+vb %>% group_by(set) %>% 
+  summarise(n(set))
+
+vb %>% group_by(hit) %>% 
+  summarise(n())
+
+vb2 <- vb %>% group_by(hit, set) %>% 
+  summarise(n())
+
+vb2 <- vb2 %>% rename(hit.n = 'n()')
+
+vb2
+```
