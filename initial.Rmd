@@ -36,8 +36,10 @@ vb %>%
 
 # try to see if there is a threshold (when we win, what is our dig to kill?)
 
-ggplot(vb2) +
-  geom_bar(aes(x=dig, fill=hit), position="fill") + scale_fill_manual("legend", values = c("kill" = "black", "attempt" = "gold", "error" = "grey"))
+vb3$hit <- factor(vb3$hit, levels = c("error", "attempt", "kill"))
+
+ggplot(vb3) +
+  geom_bar(aes(x=dig, fill=hit), position="fill") + scale_fill_manual("legend", values = c("kill" = "orange3", "attempt" = "gray100", "error" = "black"))
 
 
 
@@ -52,8 +54,7 @@ summary(m)
 
 summary(as.factor(vb2$hit2))
 
-vb2$hit2 <- factor(vb2$hit, levels = c("error", "attempt", "kill"))
-sizes
+vb3$hit <- factor(vb3$hit, levels = c("error", "attempt", "kill"))
 
 summary(vb$hit2)
 
