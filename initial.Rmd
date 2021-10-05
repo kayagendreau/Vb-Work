@@ -7,6 +7,7 @@ editor_options:
 
 ```{r setup, include=FALSE}
 library(tidyverse)
+source("~/Vb-Work/Functions.R")
 ```
 
 ```{r}
@@ -17,7 +18,7 @@ saveRDS(vb, file="~/Vb-Work/vb.rds")
 
 library(dplyr)
 
-vb <- readRDS(file="~/Vb-Work/vb.rds")
+vb <- readRDS(file="~/Vb-Work/vb1.rds")
 
 ## Dig to kill work
 
@@ -450,3 +451,11 @@ vb %>%
 # 
 # 50-60: nora. okay not useful data
 ```
+
+```{r}
+View(vb)
+log.vb0 <- glm(log(result) ~ 1, data = vb)
+log.vbf <- glm(log(result) ~ 1, data = vb)
+step(model0, direction = "both", scope = formula(model6))
+```
+
