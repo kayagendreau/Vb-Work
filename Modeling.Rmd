@@ -24,6 +24,7 @@ vb1 <- vb1 %>%
 
 view(vb1)
   
+
 #   group_by() %>%
 #   summarize(mean = mean(matings), variance = var(matings), n = n(), ratio = variance/mean) 
 # 
@@ -35,5 +36,19 @@ view(vb1)
 #   summarise(eff=(sum(kill.c)-sum(error.c))/n()) %>%
 #     ggplot(aes(x=eff)) +
 #     geom_histogram(bins=12, colour="white") + theme(text = element_text(size=20)) + labs(x="Hitting efficiency")
+```
+
+```{r}
+ggplot(vb1, aes(hit.eff)) + 
+  geom_histogram()
+
+class(vb1$hit.eff)
+
+model1 <- lm(hit.eff ~ 1, data = vb1)
+summary(model1)
+
+model2 <- lm(hit.eff ~ set + points.position + points.total + oss + dig + result, data = vb1)
+summary(model2)
+
 ```
 
