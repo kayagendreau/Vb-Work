@@ -7,17 +7,20 @@ editor_options:
 
 ```{r setup, include=FALSE}
 library(tidyverse)
+library(manipulate)
 ```
 
 ```{r}
-vb <- read_csv("C:/Users/kayag/Downloads/Volleyball stats_ 2021 - AGGREGATE (7).csv")
+vb1 <- read_csv("C:/Users/kayag/Downloads/Volleyball stats_ 2021 - AGGREGATE (7).csv")
 View(Volleyball_stats_2021_AGGREGATE_4_)
 
-saveRDS(vb, file="~/Vb-Work/vb.rds")
+saveRDS(vb, file="~/Vb-Work/vb1.rds")
 
 library(dplyr)
 
-vb <- readRDS(file="~/Vb-Work/vb.rds")
+vb <- readRDS(file="~/Vb-Work/vb1.rds")
+
+view(vb)
 
 ## Dig to kill work
 
@@ -34,7 +37,7 @@ vb %>%
 #Given that a ball was dug, based off of these stats, 15% chance it will be an error. 52% chance it will be an attempt. 32% it will be a kill. Compare this to when a ball is not dug: 18% chance it will be an error. 45% chance it will be an attempt. 37% chance it will be a kill. Not too far off?
 
 vb %>% 
-  filter(dig==1) %>% 
+  filter(dig==0) %>% 
   mutate(kill.c=ifelse(hit=="kill", 1, 0),
          error.c=ifelse(hit=="error", 1, 0)) %>% 
   group_by(opponent, set, result) %>% 
@@ -63,10 +66,12 @@ vb %>%
          error.c=ifelse(hit=="error", 1, 0)) %>% 
   group_by(opponent, set, result) %>% 
   summarise(eff=(sum(kill.c)-sum(error.c))/n()) %>% 
-  mutate(tophit=ifelse(eff>.4, ".4+", ifelse(eff<.4 & eff>.3, ".3-.4", ifelse(eff<.3 & eff>.2, ".2-.3", ifelse(eff<.2 & eff>.1, ".1-.2", ifelse(eff>0 & eff<.1, ".0-.1", ".0-"))))),
-         win=result==1) %>% 
-    ggplot(aes(x=tophit, fill=win)) +
-    geom_bar()
+  mutate(win=result==1) %>% 
+    ggplot(aes(x=eff, fill=win)) +
+    geom_histogram(bins=13, colour="white")
+
+
+
 
 vb %>% 
   filter(dig==0) %>% 
@@ -74,23 +79,10 @@ vb %>%
          error.c=ifelse(hit=="error", 1, 0)) %>% 
   group_by(opponent, set, result) %>% 
   summarise(eff=(sum(kill.c)-sum(error.c))/n()) %>% 
-  mutate(win=result==1) %>% 
-    ggplot(aes(x=eff, fill=win)) +
-    geom_histogram(bins=10)
-
-
-
-
-m<-vb %>% 
-  filter(dig==0) %>% 
-  mutate(kill.c=ifelse(hit=="kill", 1, 0),
-         error.c=ifelse(hit=="error", 1, 0)) %>% 
-  group_by(opponent, set, result) %>% 
-  summarise(eff=(sum(kill.c)-sum(error.c))/n()) %>% 
-  mutate(tophit=ifelse(eff>.3, ">.39", "<.39"),
+  mutate(tophit=ifelse(eff>.3, ">.3", "<.3"),
          win=result==1) %>% 
     ggplot(aes(x=tophit, fill=win)) +
-    geom_bar()
+    geom_bar(position="fill") + labs(x="Hitting efficiency") + scale_fill_manual("legend", values = c("TRUE" = "orange3", "FALSE" = "black")) + theme(text = element_text(size=30))
 
 # non digs: HIGH POSITIVE CORRELATION HERE. Can definitely see that higher hitting off non-digs efficiency directly corresponds to wins. Threshold: .3. 11 sets where, off of non-digs, we hit above .3. We won all but one of those (Fun fact: this one game was one where ).
 
@@ -108,10 +100,22 @@ vb %>%
          error.c=ifelse(hit=="error", 1, 0)) %>% 
   group_by(opponent, set, result) %>% 
   summarise(eff=(sum(kill.c)-sum(error.c))/n()) %>% 
-  mutate(hitting.efficiency=ifelse(eff<.2, "<.2", ">.2"),
+  mutate(hitting.efficiency=ifelse(eff<.1, "<.2", ">.2"),
          win=result==1) %>% 
     ggplot(aes(x=hitting.efficiency, fill=win)) +
     geom_bar()
+
+vb %>% 
+  filter(dig==1) %>% 
+  mutate(kill.c=ifelse(hit=="kill", 1, 0),
+         error.c=ifelse(hit=="error", 1, 0)) %>% 
+  group_by(opponent, set, result) %>% 
+  summarise(eff=(sum(kill.c)-sum(error.c))/n()) %>% 
+  mutate(hitting.efficiency=ifelse(eff<.05, "<.2", ">.2"),
+         win=result==1) %>% 
+  ggplot(aes(x=hitting.efficiency, fill=win)) +
+    geom_bar()
+  
 
 #not a super linear relatioship, but there is definitely evidence that higher dig to kill hitting efficiency yields a better chance of winning. If we hit over .2 off of our kills, we have a roughly 65% chace of winning. On the other hand, if we hit less than a .2 off of our digs, 
 
@@ -128,17 +132,54 @@ vb %>%
          error.c=ifelse(hit=="error", 1, 0)) %>% 
   group_by(opponent, set, result) %>% 
   summarise(eff=(sum(kill.c)-sum(error.c))/n()) %>% 
-  mutate(tophit=ifelse(eff>.3, ">.39", "<.39"),
+  mutate(win=result==1) %>% 
+    ggplot(aes(x=eff, fill=win)) +
+    geom_histogram(bins=12, colour="white")
+
+
+
+vb %>%
+  mutate(kill.c=ifelse(hit=="kill", 1, 0),
+         error.c=ifelse(hit=="error", 1, 0)) %>% 
+  group_by(opponent, set, oss) %>% 
+  summarise(eff=(sum(kill.c)-sum(error.c))/n()) %>% 
+  mutate(oss1=oss==1) %>% 
+    ggplot(aes(x=eff, fill=oss1)) +
+    geom_histogram(bins=12, colour="white")
+
+vb %>%
+  filter(oss==1) %>% 
+  mutate(kill.c=ifelse(hit=="kill", 1, 0),
+         error.c=ifelse(hit=="error", 1, 0)) %>% 
+  group_by(opponent, set) %>% 
+  summarise(eff=(sum(kill.c)-sum(error.c))/n()) %>%
+    ggplot(aes(x=eff)) +
+    geom_histogram(bins=12, colour="white") + theme(text = element_text(size=30)) + labs(x="Hitting efficiency")
+
+
+vb %>% 
+  filter(oss==1, hit=="kill")
+
+(624-302)/(624+302+810)
+(95-41)/(95+41+164)
+
+
+vb %>% 
+  filter(oss==1) %>% 
+  mutate(kill.c=ifelse(hit=="kill", 1, 0),
+         error.c=ifelse(hit=="error", 1, 0)) %>% 
+  group_by(opponent, set, result) %>% 
+  summarise(eff=(sum(kill.c)-sum(error.c))/n()) %>% 
+  mutate(tophit=ifelse(eff>.4, ">.39", "<.39"),
          win=result==1) %>% 
     ggplot(aes(x=tophit, fill=win)) +
-    geom_bar()
-
+    geom_bar(position="fill")
 
 
 
 mean(m$eff)
 
-#hitting efficiency when we dig: .18. When we don't dig:
+
 
 vb$hit <- factor(vb$hit, levels = c("error", "attempt", "kill"))
 
@@ -168,15 +209,28 @@ summary(vb$hit2)
 
 
 ## points total vs. avg points position
-vb3 %>% 
+vb %>% 
   group_by(points.total) %>% 
   summarise(average.pt.position=mean(points.position)) %>% 
   ggplot() +
   geom_point(aes(x=points.total, y=average.pt.position)) +
   ylim(-5,4) +
-  geom_smooth(aes(x=points.total, y=average.pt.position), span=.2)
+  geom_smooth(aes(x=points.total, y=average.pt.position), span=.2) +
+    theme(text = element_text(size=30)) + labs(x="Total Points", y="Avg. Point Difference") +
+  geom_hline(aes(yintercept = 0), color="black")
 
 mean(vb3$points.position)
+
+
+#Pt position vs set
+vb %>% 
+  group_by(set) %>% 
+  summarise(average.pt.position=mean(points.position)) %>% 
+  ggplot() +
+  geom_point(aes(x=set, y=average.pt.position)) +
+  ylim(-5,4) + theme(text = element_text(size=30)) + labs(x="Set #", y="Avg. Point Difference") +
+  geom_hline(aes(yintercept = 0), color="black") + geom_smooth(aes(x=set, y=average.pt.position), span=1)
+
 
 
 
@@ -186,10 +240,10 @@ vb %>%
          error.c=ifelse(hit=="error", 1, 0)) %>% 
   group_by(opponent, set, result) %>% 
   summarise(eff=(sum(kill.c)-sum(error.c))/n()) %>% 
-  mutate(tophit=eff>.3,
+  mutate(tophit=eff>.31,
          win=result==1) %>% 
   ggplot(aes(x=tophit, fill=win)) +
-  geom_bar(position="fill")
+  geom_bar(position="fill") + scale_fill_manual("win", values = c("FALSE" = "orange3", "TRUE" = "gray100")) + theme(text = element_text(size=30)) +labs(x="Hitting efficiency > .31")
 
 # 12 sets where we hit above a .31. We won every. single. one. of these games (against, yes macalester and westminster, but also aurora and dubuque, and hamline). 100% chance of winning if team hitting efficiency is above .31
 
@@ -200,32 +254,45 @@ m$eff
 # geom_bar(mapping = aes(x = result, fill = eff<.3), position = "fill")
 
 
+k<-vb %>% 
+  filter(oss==0|oss==1) %>% 
+  mutate(kill.c=ifelse(hit=="kill", 1, 0),
+         error.c=ifelse(hit=="error", 1, 0)) %>% 
+  mutate(eff=(sum(kill.c)-sum(error.c))/n())
 
+k$eff
 ```
-
-
-
 
 
 ```{r}
 #EDA
 
+vb %>% 
+  group_by(set, opponent)
+  filter(set==5)
+
 count(vb)
 
 ggplot(data = vb, aes(hit)) +
-  geom_histogram(stat = "count")
+  geom_histogram(stat = "count", fill="darkgoldenrod2") +
+    theme(text = element_text(size=32))
+
+filter(vb, hit=="error")
+
+(719-343)/(719+984+343)
 
 ggplot(data = vb) +
   geom_bar(aes(oss, fill = as.character(hit)), position = "fill")
 
 ggplot(data = vb, aes(dig, fill = hit)) +
-  geom_histogram(stat = "count")
+  geom_histogram(stat = "count", position="fill") + scale_fill_manual("legend", values = c("kill" = "orange3", "attempt" = "gray100", "error" = "black")) + theme(text = element_text(size=30))
+
+
+ggplot(data = vb) +
+  geom_bar(aes(oss, fill = as.character(hit)), position = "fill") + scale_fill_manual("legend", values = c("kill" = "orange3", "attempt" = "gray100", "error" = "black")) + theme(text = element_text(size=30))
 
 vb %>% group_by(dig) %>% summarise(n())
 
-
-ggplot(data = vb, aes(hit, )) +
-  geom_histogram(stat = "count")
 
 vb.lm <- lm(hit ~ dig, data = vb)
 summary(vb.lm)
@@ -252,11 +319,6 @@ vb2
 
 
 
-
-
-
-
-
 ```{r}
 vb <- read_csv("C:/Users/kayag/Downloads/Volleyball stats_ 2021 - AGGREGATE (7).csv")
 View(Volleyball_stats_2021_AGGREGATE_4_)
@@ -265,7 +327,12 @@ saveRDS(vb, file="~/Vb-Work/vb.rds")
 
 library(dplyr)
 
+#oss
 
+vb$hit <- factor(vb3$hit, levels = c("error", "attempt", "kill"))
+
+ggplot(data = vb) +
+  geom_bar(aes(oss, fill = as.character(hit)), position = "fill") + scale_fill_manual("legend", values = c("kill" = "orange3", "attempt" = "gray100", "error" = "black")) + theme(text = element_text(size=30))
 
 ## Dig to kill work
 
@@ -303,7 +370,7 @@ vb %>%
   group_by(result) %>%
   mutate(prop = n / sum(n)) %>%
   ggplot(mapping = aes(x = result, y = hit)) +
-  geom_tile(mapping = aes(fill = prop)) 
+  geom_tile(mapping = aes(fill = prop))
 
 ggplot(data = vb) +
   geom_count(mapping = aes(x = hit, y = result))
@@ -384,6 +451,9 @@ vb3 %>%
 
 
 
+
+
+
 ggplot(data = vb3, mapping = aes(x = hit, y = points.position)) + geom_boxplot() 
 
 summary(vb3$hits)
@@ -417,26 +487,26 @@ vb %>%
 
 
 vb %>% 
-  filter(set==1) %>% 
+  filter(set==4) %>% 
   ggplot() +
   geom_bar(aes(x=hitter, fill=hit), position="fill")
 
 # Set 1:
-# middles (kate, then nic). oddly, cat tends to make quiiite a few errors in the first set. After middles, then maybe gully.
+# middles (kate, then nic). oddly, cat tends to make quiiite a few errors in the first set. After middles, then gully.
 # 
-# Set 2: same
+# Set 2: same as above, hitters generally kick it up. T hit negative.
 # 
-# Set 3: MANDY. hehe. definitely nic. and any
+# Set 3: MANDY. hehe. Any has highest here, then nic, then kate. Also note: WOW hitting efficinecy doubles(ish) for a lot of players
 # 
-# Set 4: prolly our worst set. but prolly kate, cat.
+# Set 4: Very evenly matched. 
 # 
 # Set 5: any. nic
 
 #Throughout a game:
-#   vb %>% 
-#   filter(points.total>= 50 & points.position<=60) %>% 
-#   ggplot() +
-#   geom_bar(aes(x=hitter, fill=hit), position="fill")
+  vb %>%
+  filter(points.total>= 50 & points.position<=60) %>%
+  ggplot() +
+  geom_bar(aes(x=hitter, fill=hit), position="fill")
 #   
 # 0-10: kate, nic, gully
 # 
@@ -449,4 +519,71 @@ vb %>%
 # 40-50: kate, nic
 # 
 # 50-60: nora. okay not useful data
+
+vb %>% 
+  filter(set==1) %>% 
+  ggplot() +
+  geom_bar(aes(x=hitter, fill=hit), position="fill")
+
+vb %>%
+  filter(oss==1) %>% 
+  mutate(kill.c=ifelse(hit=="kill", 1, 0),
+         error.c=ifelse(hit=="error", 1, 0)) %>% 
+  group_by(opponent, set) %>% 
+  summarise(eff=(sum(kill.c)-sum(error.c))/n()) %>%
+    ggplot(aes(x=eff)) +
+    geom_histogram(bins=12, colour="white") + theme(text = element_text(size=20)) + labs(x="Hitting efficiency")
+
+
+##error percent throughout a set
+
+
+vb %>%
+  filter(hitter=="gully"|hitter=="kate"|hitter=="t"|hitter=="any"|hitter=="cat"|hitter=="nic"|hitter=="nora") %>% 
+  mutate(kill.c=ifelse(hit=="kill", 1, 0),
+         error.c=ifelse(hit=="error", 1, 0)) %>% 
+  group_by(hitter, points.total) %>% 
+  summarise(eff=(sum(error.c))/n()) %>%
+    ggplot(aes(x=points.total, y=eff, color=hitter)) +
+    geom_smooth(se=F) + theme(text = element_text(size=30)) + labs(x="Total points", y="Error %", main="Overall")
+
+vb %>% 
+  filter(oss==1|oss==0)
+
+ vb %>% 
+   filter(dig==1) %>% 
+   mutate(kill.c=ifelse(hit=="kill", 1, 0),
+         error.c=ifelse(hit=="error", 1, 0)) %>% 
+   group_by(hitter) %>% 
+   summarise(eff=(sum(kill.c)-sum(error.c))/n())
+ 
+ 
+ 
+187036 +195685 +289335 +234427+183139+170265+96577+116640+194042
+
 ```
+
+
+#Let's try to make a manipulate graph
+
+```{r}
+
+
+
+#create slider for a and b
+manipulate({
+  modelSoln = tumorV(c(a=a,b=b), t_data, V0, K0)  # Solve tumor model
+  plot(t_data,V_data)  # Plot data
+  lines(modelSoln$t,modelSoln$V,type="l",ylab="V")  # Overlay model output on data
+},
+a=slider(0,2,step=0.1),
+b=slider(0,2,step=0.1)
+)
+```
+
+
+#make a model from toal points and difference. then graph total points vs hit % with the slider parameter being 
+
+#turn point difference into categorical, plot a series of graphs (facet wraps)
+
+#hitters as random effects
