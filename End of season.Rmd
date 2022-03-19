@@ -1,0 +1,117 @@
+---
+title: "Untitled"
+output: pdf_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(dplyr)
+library(foreign)
+library(MASS)
+library(Hmisc)
+library(reshape2)
+library(readr)
+library(rsconnect)
+library(lme4)
+
+vb <- readRDS(file="~/Vb-Work/vb1.rds")
+View(vb)
+```
+
+
+
+# End of season
+
+```{r}
+# getting data
+
+# Summary stats
+
+
+# throughout season
+
+
+vb %>%
+  mutate(kill.c=ifelse(hit=="kill", 1, 0),
+         error.c=ifelse(hit=="error", 1, 0)) %>% 
+  group_by(order) %>% 
+  summarise(eff=(sum(kill.c)-sum(error.c))/n(), result=as.logical(result)) %>%
+    ggplot() +
+    geom_point(aes(x=order, y=eff, color=result)) +
+  ylim(c(-.5,.8)) +
+  geom_smooth(aes(x=order, y=eff), color="black") +
+  theme(text = element_text(size=20)) +
+  labs(y="Hitting efficiency", x="Set #, throughout season", color="Win?")
+
+vb %>% filter(hit=="attempt")
+
+(1211-535)/(1211+535+1636)
+
+
+
+data <- ultimate.(
+  Date=c("10/11/2012","10/12/2012"),
+  AE=c(1211,100),
+  Percent=c(0.03,0.43)
+)
+
+sapply(data, function(x) !all(is.na(as.Date(as.character(x),format="%d/%m/%Y"))))
+```
+
+#Who to set in diff situations
+
+```{r}
+# hey this is kinda cool - function to see top hitters in any given situation. Note: the more restrictive you set the windows, the less data we have, so the less confidence we can have in the output
+who.set.player3 <- function(set.num, total.points, ahead.behind){
+  vb %>%
+    filter(set %in% set.num & points.total %in% total.points & points.position %in% ahead.behind) %>% 
+  mutate(kill.c=ifelse(hit=="kill", 1, 0),
+         error.c=ifelse(hit=="error", 1, 0)) %>% 
+  group_by(hitter) %>% 
+  summarise(hitting.efficiency=(sum(kill.c)-sum(error.c))/n()) %>% 
+  arrange(desc(hitting.efficiency))
+}
+
+who.set.player3(set.num = seq(1,5), total.points = seq(0,53), ahead.behind = seq(-13,18)) # no restrictions
+
+who.set.player3(set.num = seq(1,1), total.points = seq(0,53), ahead.behind = seq(-13,53))
+```
+
+
+# Modeling (attempt)
+
+```{r}
+k<-vb %>%
+  mutate(kill.c=ifelse(hit=="kill", 1, 0),
+         error.c=ifelse(hit=="error", 1, 0)) %>% 
+  group_by(order) %>% 
+  summarise(eff=(sum(kill.c)-sum(error.c))/n(), result=as.logical(result), oss.avg= sum(oss)/n(), dig.avg = sum(dig)/n()) # each unique order is a different game
+View(k)
+x<-lm(result ~ eff + dig.avg + order, data=k)
+summary(x) # all variables are statistically significant! idk if i actually did this right
+
+vb$eff <- k$eff
+view(vb)
+
+
+x <- lmer(result ~ 1 + (1|opponent), data = vb, REML = TRUE)
+summary(x) # there is a significant difference in intercepts from opponent to opponent
+
+unique(vb$result)
+
+vb %>% 
+  ggplot() +
+  geom_point(aes(x=order, y=))
+```
+
+
+
+#stats
+
+```{r}
+x <- ultimate.data %>% filter(home_away == "home", year == 2021)
+y <- ultimate.data %>% filter(home_away == "away", year == 2021)
+t.test(x$sre.per.set,y$sre.per.set, alternative = "two.sided") ## wow.
+```

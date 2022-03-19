@@ -1,0 +1,13 @@
+name: Demo
+title: Demo
+username:
+account: kayagendreau
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 5861934
+bundleId: 5688814
+url: https://kayagendreau.shinyapps.io/Demo/
+when: 1647383374.51295
+lastSyncTime: 1647383374.51295
+asMultiple: FALSE
+asStatic: FALSE

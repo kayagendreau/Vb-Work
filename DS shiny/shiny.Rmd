@@ -1,0 +1,676 @@
+---
+title: "SOVB Analytics"
+runtime: shiny
+output: 
+  flexdashboard::flex_dashboard:
+    theme: 
+      version: 4
+      bg: "#FDF7F7"
+      fg: "#101010" 
+      primary: "#ED79F9"
+      navbar-bg: "#b59736"
+      base_font: 
+        google: Prompt
+      heading_font:
+        google: Sen
+      code_font:
+        google: 
+          # arguments to sass::font_google() 
+          family: JetBrains Mono
+          local: false
+    logo: smallole.JPG
+---
+
+```{r global, include=FALSE, message=FALSE}
+library(readr)
+library(knitr)
+library(tidyverse)
+library(dplyr)
+data.all <- read_csv("ultimate.data.csv")
+allstats <- read_csv("allstats.csv")
+vb <- read_csv("vb.csv")
+imvb <- read_csv("IM Volleyball Stats - Sheet1.csv")
+```
+
+About
+==========================
+
+Column {data-width = 400}
+-------------------------
+
+#### Background Information
+
+In this Shiny app, we investigate many of the subtle variables of that affect the outcome of a volleyball game. Using the Ole Girl's Volleyball statistics from the 2016-2021 seasons, we compare certain skills in different game situation throughout time.
+
+Data source:  [St. Olaf Athletic Page](https://athletics.stolaf.edu/sports/womens-volleyball/stats/2021)
+
+```{r}
+p("Other things to note:")
+```
+
++ St. Olaf athletics is a part of the Minnesota Intercolllegiate Athletic Conference ([MIAC](https://www.miacathletics.com/members/index))
++ The 2020 season was postponed to spring of 2021. This season consisted of only 5 games; we ommitted this season in many parts of our analysis due to the limited data.
+
+```{r}
+
+renderImage({
+    # Return a list
+    list(src = "Team_Photo2021.png",
+         alt = "This is alternate text", width = 600, height = 300)
+  })
+```
+
+#### Acknowledgements
+
+```{r}
+p("We would like to give a special thanks to Trey Witcraft for volunteering his time to take statistics for the Intramural games; David McGowan for his time spent outside of TA office hours generously providing his help; St. Olaf Men's volleyball club for providing members to take statistics for the St. Olaf athletics page - the major source of our data; Professor Roback for his unwavering willingess to provide assistance.")
+```
+
+Hitting
+==========================
+
+
+Inputs {.sidebar}
+-------------------------
+```{r, echo=FALSE}
+inputPanel(
+  selectInput("y", label = "y-axis variable",
+              choices = c("Kills per set" = "kills.per.set", "Hitting efficiency" = "PCT")), 
+  selectInput("x", label = "Individual Year",
+              choices = c("2021" = "2021", "2019" = "2019", "2018" = "2018", "2017" = "2017", "2016" = "2016", "All years" = "all"))
+)
+
+inputPanel(selectInput("wt", label = "Division Variable",
+              choices = c("Games Won vs. Loss" = "`W.L`", "Conference vs. Non-conference" = "conf_nonconf", "Home vs. Away" = "home_away")))
+
+p("These figures explore hitting statistics over time and compairng them in different game situations (Home vs. away, conference vs. non-conference opponents, games that were won vs. lost)")
+```
+
+
+Column 
+-------------------------
+
+```{r, echo = FALSE}
+renderPlot({
+if(input$x == "all")
+   data.all %>%
+  ggplot(aes_string(y=input$y, x="yearless.date")) +
+  geom_point() + ggtitle("Evolution of SOVB: Hitting") + geom_smooth(color="orange3") ##?
+
+else
+  data.all %>%
+  filter(year %in% c(input$x)) %>% 
+  ggplot(aes_string(y=input$y, x="Date")) +
+  geom_point() + ggtitle("Evolution of SOVB: Hitting") + geom_smooth(color="orange3")
+ 
+})
+```
+
+
+```{r, echo = FALSE}
+renderPlot({
+  allstats %>%
+  ggplot(aes_string(y=input$y, x="year")) +
+  geom_point() + ggtitle("Evolution of SOVB: Hitting") + geom_smooth(color="orange3")
+})
+```
+
+Column 
+-------------------------
+
+```{r}
+renderPlot({
+  if(input$x == "all")
+  data.all %>% 
+  # group_by(input$u) %>% 
+  # summarise(grp.mean = mean(input$o), input$o = input$o) %>% 
+  ggplot(aes_string(y = input$y, x = input$wt)) +
+  geom_boxplot() + ggtitle("Distribution of Hits")
+  #geom_vline(aes_string(xintercept = grp.mean, color = input$u), linetype = "dashed") + xlab("Hitting efficiency")
+    
+else 
+  data.all %>% 
+  filter(year %in% c(input$x)) %>% 
+  # group_by(input$u) %>% 
+  # summarise(grp.mean = mean(input$o), input$o = input$o) %>% 
+  ggplot(aes_string(y = input$y, x = input$wt)) +
+  geom_boxplot() + ggtitle("Distribution of Hits")
+})
+```
+
+```{r}
+p("Useful Vocabulary:")
+p("A volleyball 'set' is played to 25 points.", style = "font-size:10px;")
+p("A 'Kill' is awarded to a player when their spike is unreturnable by the other team- a kill is a hit which directly leads to a point.", style = "font-size:10px;")
+p("'Hitting Efficiency'is calculated by taking the total number of kills an attacker gets, subtracting the errors, then dividing by their total number of attempts. These numbers are compared in a similar range to a batting average. A player that hits over '.300' is considered good. Hitting Efficiency = (Kills - Errors) / Total Attempts.", style = "font-size:10px;")
+```
+
+Blocking
+==========================
+
+Inputs {.sidebar}
+-------------------------
+```{r, echo=FALSE}
+inputPanel(
+  selectInput("z", label = "y-axis variable",
+              choices = c("Blocking error rate" = "blocking.error.rate", "Blocks per set" = "blocks.per.set")), 
+  selectInput("q", label = "Individual Year",
+              choices = c("2021" = "2021", "2019" = "2019", "2018" = "2018", "2017" = "2017", "2016" = "2016", "All years" = "all")),
+  selectInput("qt", label = "Division Variable",
+              choices = c("Games Won vs. Loss" = "`W.L`", "Conference vs. Non-conference" = "conf_nonconf", "Home vs. Away" = "home_away"))
+)
+p("These figures explore blocking statistics over time and compairng them in different game situations (Home vs. away, conference vs. non-conference opponents, games that were won vs. lost)")
+```
+
+Column 
+-------------------------
+
+```{r, echo = FALSE}
+renderPlot({
+if(input$q == "all")
+   data.all %>%
+  ggplot(aes_string(y=input$z, x="yearless.date")) +
+  geom_point() + ggtitle("Evolution of SOVB: Blocking") + geom_smooth(color="orange3")
+
+else
+  data.all %>%
+  filter(year %in% c(input$q)) %>% 
+  ggplot(aes_string(y=input$z, x="Date")) +
+  geom_point() + ggtitle("Evolution of SOVB: Blocking") + geom_smooth(color="orange3")
+ 
+})
+```
+
+```{r, echo = FALSE}
+renderPlot({
+  allstats %>%
+  ggplot(aes_string(y=input$z, x="year")) +
+  geom_point() + ggtitle("Evolution of SOVB: Blocking") + geom_smooth(color="orange3")
+})
+```
+
+Column 
+-------------------------
+
+```{r}
+renderPlot({
+  if(input$q == "all")
+  data.all %>% 
+  ggplot(aes_string(x = input$qt, y = input$z)) +
+  geom_violin() +
+ stat_summary(fun = "mean",
+               geom = "crossbar",
+               width = 0.25,
+               aes(color = "Mean")) +
+  stat_summary(fun = "median",
+               geom = "point",
+               aes(color = "Median")) +
+  scale_colour_manual(values = c("red", "blue"), 
+                      name = "") + ggtitle("Distribution of Blocks")
+  
+else 
+  data.all %>%
+  filter(year %in% c(input$q)) %>% 
+  ggplot(aes_string(x = input$qt, y = input$z)) +
+  geom_violin() +
+ stat_summary(fun = "mean",
+               geom = "crossbar",
+               width = 0.25,
+               aes(color = "Mean")) +
+  stat_summary(fun = "median",
+               geom = "point",
+               aes(color = "Median")) +
+  scale_colour_manual(values = c("red", "blue"), 
+                      name = "") + ggtitle("Distribution of Blocks")
+})
+```
+
+```{r}
+p("Useful Vocabulary:")
+p("A 'block' is when a player rejects the opponent’s hit and it lands back on the hitter’s side.", style = "font-size:10px;")
+p("'Blocking error rate' is the percentage of blocks which are errors: a blocking error is when when a player goes up at the net to block the ball coming over, but fails to do so properly.", style = "font-size:10px;")
+```
+
+Setting
+==========================
+
+Inputs {.sidebar}
+-------------------------
+```{r, echo=FALSE}
+inputPanel(
+  selectInput("n", label = "y-axis variable",
+              choices = c("Assists per set" = "assists.per.set", "Ball handling error rate" = "bhe.rate")), 
+  selectInput("m", label = "Individual Year",
+              choices = c("2021" = "2021", "2019" = "2019", "2018" = "2018", "2017" = "2017", "2016" = "2016", "All years" = "all")),
+  selectInput("rt", label = "Division Variable",
+              choices = c("Games Won vs. Loss" = "`W.L`", "Conference vs. Non-conference" = "conf_nonconf", "Home vs. Away" = "home_away"))
+  
+)
+p("These figures explore setting statistics over time and compairng them in different game situations (Home vs. away, conference vs. non-conference opponents, games that were won vs. lost)")
+```
+
+Column 
+-------------------------
+
+```{r, echo = FALSE}
+renderPlot({
+if(input$m == "all")
+   data.all %>%
+  ggplot(aes_string(y=input$n, x="yearless.date")) +
+  geom_point() + ggtitle("Evolution of SOVB: Setting") + geom_smooth(color="orange3")
+
+else
+  data.all %>%
+  filter(year %in% c(input$m)) %>% 
+  ggplot(aes_string(y=input$n, x="Date")) +
+  geom_point() + ggtitle("Evolution of SOVB: Setting") + geom_smooth(color="orange3")
+ 
+})
+```
+
+```{r, echo = FALSE}
+renderPlot({
+  allstats %>%
+  ggplot(aes_string(y=input$n, x="year")) +
+  geom_point() + ggtitle("Evolution of SOVB: Setting") + geom_smooth(color="orange3")
+})
+```
+
+Column 
+-------------------------
+
+```{r}
+renderPlot({
+  if(input$m == "all")
+  data.all %>% 
+  ggplot(aes_string(x = input$rt, y = input$n)) +
+  geom_violin() +
+ stat_summary(fun = "mean",
+               geom = "crossbar",
+               width = 0.25,
+               aes(color = "Mean")) +
+  stat_summary(fun = "median",
+               geom = "point",
+               aes(color = "Median")) +
+  scale_colour_manual(values = c("red", "blue"), 
+                      name = "") + ggtitle("Distribution of Sets")
+  
+else 
+  data.all %>%
+  filter(year %in% c(input$m)) %>% 
+  ggplot(aes_string(x = input$rt, y = input$n)) +
+  geom_violin() +
+ stat_summary(fun = "mean",
+               geom = "crossbar",
+               width = 0.25,
+               aes(color = "Mean")) +
+  stat_summary(fun = "median",
+               geom = "point",
+               aes(color = "Median")) +
+  scale_colour_manual(values = c("red", "blue"), 
+                      name = "") + ggtitle("Distribution of Sets")
+})
+```
+
+
+```{r}
+p("Useful Vocabulary:")
+p("An 'assist' is counted when the setter successfully sets up a hitter for a kill.", style = "font-size:10px;")
+p("A player is charged with a 'ball handling error' when an official calls a violation for a lifted ball, double hit or thrown ball: the ball handeling errors recorded here are illegal calls on the 2nd or 3rd touch.", style = "font-size:10px;")
+```
+
+
+Serving
+==========================
+
+Inputs {.sidebar}
+-------------------------
+```{r, echo=FALSE}
+inputPanel(
+  selectInput("a", label = "y-axis variable",
+              choices = c("Serving errors per set" = "se.per.set", "Aces per set" = "sa.per.set")), 
+  selectInput("b", label = "Individual Year",
+              choices = c("2021" = "2021", "2019" = "2019", "2018" = "2018", "2017" = "2017", "2016" = "2016", "All years" = "all")), 
+  selectInput("u", label = "Division Variable",
+              choices = c("Games Won vs. Loss" = "`W.L`", "Conference vs. Non-conference" = "conf_nonconf", "Home vs. Away" = "home_away"))
+)
+p("These figures explore serving statistics over time and compairng them in different game situations (Home vs. away, conference vs. non-conference opponents, games that were won vs. lost)")
+```
+
+Column {data-width = 200}
+-------------------------
+
+
+```{r, echo = FALSE}
+renderPlot({
+if(input$b == "all")
+   data.all %>%
+  ggplot(aes_string(y=input$a, x="yearless.date")) +
+  geom_point() + ggtitle("Evolution of SOVB: Serving") + geom_smooth(color="orange3")
+
+else
+  data.all %>%
+  filter(year %in% c(input$b)) %>% 
+  ggplot(aes_string(y=input$a, x="Date")) +
+  geom_point() + ggtitle("Evolution of SOVB: Serving") + geom_smooth(color="orange3")
+ 
+})
+```
+
+```{r, echo = FALSE}
+renderPlot({
+  allstats %>%
+  ggplot(aes_string(y=input$a, x="year")) +
+  geom_point() + ggtitle("Evolution of SOVB: Serving") + geom_smooth(color="orange3")
+})
+```
+
+Column 
+-------------------------
+
+```{r}
+renderPlot({
+  if(input$b == "all")
+  data.all %>% 
+  # group_by(input$u) %>% 
+  # summarise(grp.mean = mean(input$o), input$o = input$o) %>% 
+  ggplot(aes_string(x = input$a, color = input$u)) +
+  geom_density() + ggtitle("Distribution of Serves")
+  #geom_vline(aes_string(xintercept = grp.mean, color = input$u), linetype = "dashed") + xlab("Hitting efficiency")
+  
+else 
+  data.all %>% 
+  filter(year %in% c(input$b)) %>% 
+  # group_by(input$u) %>% 
+  # summarise(grp.mean = mean(input$o), input$o = input$o) %>% 
+  ggplot(aes_string(x = input$a, color = input$u)) +
+  geom_density() + ggtitle("Distribution of Serves")
+  #geom_vline(aes_string(xintercept = grp.mean, color = input$u), linetype = "dashed") + xlab("Hitting efficiency")
+})
+```
+
+```{r}
+p("Useful Vocabulary:")
+p("An 'Ace' is a serve that directly leads to a point earned for the team that served it.", style = "font-size:10px;")
+p("A 'service error' is a serve that does not clear the net or goes out of bounds; a service error always leads to a point for the opposing team.", style = "font-size:10px;")
+```
+
+Passing
+==========================
+
+Inputs {.sidebar}
+-------------------------
+```{r, echo=FALSE}
+inputPanel(
+  selectInput("p", label = "y-axis variable",
+              choices = c("Digs per set" = "digs.per.set", "Serve receive errors per set" = "sre.per.set")), 
+  selectInput("w", label = "Individual Year",
+              choices = c("2021" = "2021", "2019" = "2019", "2018" = "2018", "2017" = "2017", "2016" = "2016", "All years" = "all")), 
+  selectInput("jt", label = "Division Variable",
+              choices = c("Games Won vs. Loss" = "`W.L`", "Conference vs. Non-conference" = "conf_nonconf", "Home vs. Away" = "home_away"))
+)
+p("These figures explore passing statistics over time and compairng them in different game situations (Home vs. away, conference vs. non-conference opponents, games that were won vs. lost)")
+```
+
+Column 
+-------------------------
+
+```{r, echo = FALSE}
+renderPlot({
+if(input$w == "all")
+   data.all %>%
+  ggplot(aes_string(y=input$p, x="yearless.date")) +
+  geom_point() + ggtitle("Evolution of SOVB: Passing") + geom_smooth(color="orange3")
+
+else
+  data.all %>%
+  filter(year %in% c(input$w)) %>% 
+  ggplot(aes_string(y=input$p, x="Date")) +
+  geom_point() + ggtitle("Evolution of SOVB: Passing") + geom_smooth(color="orange3")
+ 
+})
+```
+
+```{r, echo = FALSE}
+renderPlot({
+  allstats %>%
+  ggplot(aes_string(y=input$p, x="year")) +
+  geom_point() + ggtitle("Evolution of SOVB: Passing") + geom_smooth(color="orange3")
+})
+```
+
+
+Column 
+-------------------------
+```{r}
+renderPlot({
+  if(input$w == "all")
+  data.all %>% 
+  # group_by(input$u) %>% 
+  # summarise(grp.mean = mean(input$o), input$o = input$o) %>% 
+  ggplot(aes_string(x = input$p, color = input$jt)) +
+  geom_density() + ggtitle("Distribution of Passes")
+  #geom_vline(aes_string(xintercept = grp.mean, color = input$u), linetype = "dashed") + xlab("Hitting efficiency")
+  
+else 
+  data.all %>% 
+  filter(year %in% c(input$w)) %>% 
+  # group_by(input$u) %>% 
+  # summarise(grp.mean = mean(input$o), input$o = input$o) %>% 
+  ggplot(aes_string(x = input$p, color = input$jt)) +
+  geom_density() + ggtitle("Distribution of Passes")
+  #geom_vline(aes_string(xintercept = grp.mean, color = input$u), linetype = "dashed") + xlab("Hitting efficiency")
+})
+```
+
+```{r}
+p("Useful vocabulary:")
+p("A 'Dig' is awarded when a player receives an attacked ball and it is kept in play.", style = "font-size:10px;")
+p("A 'serve-recieve error' is when the opponent serves the ball and the first contact leads to immidiate point for the serving team.", style = "font-size:10px;")
+```
+
+Hitting: 2021
+==========================
+
+Inputs {.sidebar}
+-------------------------
+```{r, echo=FALSE}
+inputPanel(
+  selectInput("st", label = "Situation breakdown",
+              choices = c("Conference vs. non-conference opponent" = "conf_nonconf", "Set won vs. lost" = "result2", "Hitting from digs vs. non-digs" = "dig2", "Hitting from OSS vs. ISS" = "oss2"))
+)
+
+inputPanel(
+  selectInput("gp", label = "Hitting throughout the course of",
+              choices = c("One set" = "points.total", "One match" = "set", "One season" = "order", "A range of points ahead/behind by" = "points.position")),
+  checkboxInput("type_check2","Divide statistics by hitter position?",value=FALSE)
+)
+p("These figures explore hitting statistics over time and compairng them in different game situations (Home vs. away, conference vs. non-conference opponents, games that were won vs. lost)")
+```
+
+Column 
+-------------------------
+
+```{r}
+p("Additional statistics were taken by one of the authors for the 2021 volleyball season. These statistics were centered around our offense (hitting). We look at hitting in different situations.")
+p("Useful Vocabulary:")
+p("ISS: In system set. When a hit came from a set that was from the designated setter (ideal situation). OSS: Out of system set. When a hit came from a set that was not from the designated setter.", style = "font-size:10px;")
+p("Hitting from digs: Hits that came from sets that came from digs (when the opponent attacks the ball and one of our players pass it). Hitting from non-digs: Hits that come from free balls (when the other team passes the ball over and we pass it) or serve receive balls.", style = "font-size:10px;")
+
+p("In addition to looking at our hitting efficiency throughout one season, we explored our average hitting efficiency throughout the course of one set, one match (consisting of 3-5 sets), and a range of points we were ahead/behind by (ex. -5 on the x-axis indicates a situation where we were behind by 5 points).", style = "font-size:10px;")
+
+p("Checking the box allows one to see the statistics divided by the three hitting positions: outside, right side, and middle.", style = "font-size:10px;")
+```
+
+Column 
+-------------------------
+
+```{r}
+renderPlot({
+  vb %>% 
+  mutate(oss2 = ifelse(oss=="1", "OSS", "ISS"), dig2 = ifelse(dig=="1", "Dig", "Non-dig"), result2 = ifelse(result=="1", "W", "L")) %>%
+  ggplot() +
+  geom_bar(aes_string(input$st, fill = "hit"), position = "fill") + scale_fill_manual("legend", values = c("kill" = "orange3", "attempt" = "gray100", "error" = "black")) + xlab(" ") + ggtitle("Hitting breakdown")
+    
+})
+```
+
+
+```{r}
+renderPlot({
+  if (input$type_check2) 
+  vb %>%
+  mutate(x = vb[[input$gp]], kill.c=ifelse(hit=="kill", 1, 0),
+         error.c=ifelse(hit=="error", 1, 0)) %>% 
+  group_by(x, hitter.group) %>% 
+  dplyr::summarise(eff=(sum(kill.c)-sum(error.c))/dplyr::n()) %>%
+    ggplot(aes_string(x="x", y="eff", color = "hitter.group")) +
+    geom_point() +
+  geom_smooth() +
+  labs(y="Hitting efficiency") + scale_color_manual("legend", values = c("Middle" = "orange3", "Outside" = "gray43", "Rightside" = "black"))
+  else
+    vb %>%
+  mutate(x = vb[[input$gp]], kill.c=ifelse(hit=="kill", 1, 0),
+         error.c=ifelse(hit=="error", 1, 0)) %>%
+  group_by(x) %>% 
+  dplyr::summarise(eff=(sum(kill.c)-sum(error.c))/dplyr::n()) %>%
+    ggplot(aes_string(x= "x", y="eff")) +
+    geom_point() +
+  geom_smooth(color="orange3") +
+  labs(y="Hitting efficiency", x = "Time frame")
+})
+
+
+# renderPlot({
+#     ames %>% as_tibble() %>%
+#       mutate(x = ames[[input$categ]]) %>%
+#       group_by(x) %>%
+#       summarise(meanprice = mean(SalePrice, na.rm = TRUE)) %>%
+#       mutate(x = fct_reorder(x, meanprice)) %>%
+#     ggplot(aes_string(x = "x", y = "meanprice")) +
+#       geom_bar(stat = "identity") +
+#       labs(x = input$categ)
+# })
+```
+
+
+
+
+
+IM Championship
+==========================
+
+Inputs {.sidebar}
+-------------------------
+```{r}
+inputPanel(
+  selectInput("input", label = "Hitting Statistic",
+              choices = c("Kills" = "Kills", "Attempts" = "Attempts", "Errors" = "Errors", "Hitting Efficiency" = "eff")))
+
+inputPanel(
+  selectInput("inpt", label = "Serving statistic",
+              choices = c("Aces" = "Aces", "Serving Errors" = "`Serving Errors`")))
+
+```
+
+Row
+-------------------------
+
+```{r}
+strong("Most recent volleyball played on St. Olaf campus (as of 12/21)")
+```
+
+```{r}
+p("The most recent volleyball played on St. Olaf campus was the Intramural championship, where your authors took each other on head-to-head. Hitting and serving statistics were taken on each author during the semi-champioship and championship games. Let's see how the stats stood!")
+```
+
+#### About the Authors
+
+```{r}
+strong("The Volleyball enthusiasts: Kaya Gendreau ('23), Michael Milad ('22)")
+p("Kaya Gendreau is a defensive specialist on the St. Olaf varsity volleyball team, majoring in mathematics and French. Michael Milad is an outside hitter on the men's club volleyball team at St. Olaf, majoring in mathematics and studio art. 
+")
+```
+
+
+
+Row
+-------------------------
+
+```{r}
+renderPlot({
+  imvb %>%
+  group_by(Set, Player) %>% 
+  summarise(eff=(Kills-Errors)/(Attempts+Errors+Attempts), Kills = Kills, Attempts = Attempts, Errors = Errors, Set = Set, Player = Player, Aces = Aces) %>%
+    ggplot(aes_string(x="Set", y=input$input, color = "Player")) +
+    geom_point() + geom_smooth() + scale_color_manual("legend", values = c("Kaya" = "orange3", "Michael" = "black")) +
+  ggtitle("Kaya Vs. Michael: Hitting statistics")
+})
+
+
+renderPlot({
+  imvb %>% 
+  group_by(Game, Player) %>% 
+  summarise(Aces = Aces, `Serving Errors` = `Serving.Errors`, Set=Set, Player = Player, Game =  Game) %>% 
+  ggplot(aes_string(x="Game", fill="Player")) +
+  geom_col(aes_string(y=input$inpt)) + ggtitle("Kaya Vs. Michael: Serving statistics")
+})
+```
+
+
+
+
+Players
+==========================
+
+Inputs {.sidebar}
+-------------------------
+```{r}
+inputPanel(
+sliderInput("range.set", label = "Set:",
+            min = 1, max = 5,
+            value = c(1, 5)),
+sliderInput("range.totalpoints", label = "Total Points:",
+            min = 0, max = 53,
+            value = c(0, 53)),
+sliderInput("range.pointsposition", label = "Point Difference:",
+            min = -13, max = 18,
+            value = c(-13, 18))
+)
+```
+
+
+Row
+-------------------------
+
+```{r}
+p("This is a table of ranked hitting efficiencies based on last season's data. Note: The more narrow the window you are selecting, the less data available to calculate the statistic. The sample.size column shows you how many data points (hits) the hitting efficiency is being calculated from.")
+```
+
+
+Row
+-------------------------
+
+```{r}
+# renderTable({
+#   vb %>%
+#     filter(set >= input$range.set[1] & set <= input$range.set[2]) %>% 
+#   mutate(kill.c=ifelse(hit=="kill", 1, 0),
+#          error.c=ifelse(hit=="error", 1, 0)) %>% 
+#   group_by(hitter) %>% 
+#   summarise(eff=(sum(kill.c)-sum(error.c))/n()) %>% 
+#   arrange(desc(eff))
+# })
+
+
+renderTable({
+  vb %>%
+    filter(set >= input$range.set[1] & set <= input$range.set[2] & points.total >= input$range.totalpoints[1] & points.total <= input$range.totalpoints[2] & points.position >= input$range.pointsposition[1] & points.position <= input$range.pointsposition[2]) %>%
+  mutate(kill.c=ifelse(hit=="kill", 1, 0),
+         error.c=ifelse(hit=="error", 1, 0)) %>%
+  group_by(hitter) %>%
+  summarise(hitting.efficiency=(sum(kill.c)-sum(error.c))/n(), sample.size=n()) %>%
+  arrange(desc(hitting.efficiency))
+})
+
+```

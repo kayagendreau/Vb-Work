@@ -7,21 +7,45 @@ editor_options:
 
 ```{r setup, include=FALSE}
 library(tidyverse)
-library(manipulate)
+library(dplyr)
+library(foreign)
+library(MASS)
+library(Hmisc)
+library(reshape2)
+library(readr)
+library(rsconnect)
 ```
 
+
 ```{r}
-vb1 <- read_csv("C:/Users/kayag/Downloads/Volleyball stats_ 2021 - AGGREGATE (7).csv")
-View(Volleyball_stats_2021_AGGREGATE_4_)
-
-saveRDS(vb, file="~/Vb-Work/vb1.rds")
-
-library(dplyr)
+rsconnect::deployApp('path/to/your/app')
+vb1 <- read.csv("C:/Users/kayag/Downloads/Volleyball stats_ 2021 - AGGREGATE (9).csv")
+write_csv(vb1, '~/Vb-Work/DS shiny/vb.csv')
 
 vb <- readRDS(file="~/Vb-Work/vb1.rds")
+View(vb)
 
-view(vb)
+vb_1_ <- read.csv("C:/Users/kayag/Downloads/vb (1).csv")
+saveRDS(vb1, file="~/Vb-Work/DS shiny/vb1.rds")
 
+write_csv(vb_1_, '~/Vb-Work/DS shiny/vb.csv')
+
+`ultimate.data` <- read.csv("C:/Users/kayag/Downloads/ultimate.data (1).csv")
+write_csv(ultimate.data, '~/Vb-Work/DS shiny/ultimate.data.csv')
+
+`allstats` <- read.csv("C:/Users/kayag/Downloads/allstats (1).csv")
+write_csv(allstats, '~/Vb-Work/DS shiny/allstats.csv')
+
+IM.Volleyball.Stats...Sheet1 <- read.csv("C:/Users/kayag/Downloads/IM Volleyball Stats - Sheet1.csv")
+
+write_csv(IM.Volleyball.Stats...Sheet1, '~/Vb-Work/DS shiny/IM Volleyball Stats - Sheet1.csv')
+```
+
+
+## Mid season
+
+
+```{r}
 ## Dig to kill work
 
 vb %>%
@@ -273,7 +297,10 @@ vb %>%
 
 count(vb)
 
-ggplot(data = vb, aes(hit)) +
+
+vb %>% mutate(hit = fct_relevel(hit, 
+            "error", "attempt", "kill")) %>%
+ggplot(aes(hit)) +
   geom_histogram(stat = "count", fill="darkgoldenrod2") +
     theme(text = element_text(size=32))
 
@@ -324,6 +351,8 @@ vb <- read_csv("C:/Users/kayag/Downloads/Volleyball stats_ 2021 - AGGREGATE (7).
 View(Volleyball_stats_2021_AGGREGATE_4_)
 
 saveRDS(vb, file="~/Vb-Work/vb.rds")
+
+read_rds(vb1.rds)
 
 library(dplyr)
 
@@ -564,7 +593,7 @@ vb %>%
 ```
 
 
-#Let's try to make a manipulate graph
+#Let's try to make a manipulate graph. Or not lol.
 
 ```{r}
 

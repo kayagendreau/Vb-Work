@@ -38,7 +38,21 @@ view(vb1)
 #     geom_histogram(bins=12, colour="white") + theme(text = element_text(size=20)) + labs(x="Hitting efficiency")
 ```
 
+
+# Linear regression attempt
+
 ```{r}
+vb %>%
+  mutate(kill.c=ifelse(hit=="kill", 1, 0),
+         error.c=ifelse(hit=="error", 1, 0)) %>% 
+  group_by(points.total) %>% 
+  summarise(k=(sum(error.c))) %>%
+    ggplot() +
+    geom_density(aes(x=points.total, y=k))
+
+vb %>% 
+  filter(points.total<=10)
+
 ggplot(vb1, aes(hit.eff)) + 
   geom_histogram()
 
@@ -49,6 +63,24 @@ summary(model1)
 
 model2 <- lm(hit.eff ~ set + points.position + points.total + oss + dig + result, data = vb1)
 summary(model2)
+```
+
+
+```{r}
+# modeling
+
+vb$hit = factor(vb$hit, levels = c("error", "attempt", "kill"), ordered = TRUE)
+
+m <- polr(hit ~ points.total + points.position + set + oss + dig + hitter, data = vb, Hess=TRUE)
+
+summary(m) # only significant predictor is points.total
+
+(ctable <- coef(summary(m)))
+
+p <- pnorm(abs(ctable[, "t value"]), lower.tail = FALSE) * 2
+
+(ctable <- cbind(ctable, "p value" = p))
+
 
 ```
 
