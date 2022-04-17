@@ -9,7 +9,7 @@ editor_options:
 library(dplyr)
 library(tidyverse)
 
-vb <- readRDS(file="~/Vb-Work/vb1.rds")
+vb <- read_csv(file="Vbstats.2021.csv")
 ```
 
 ```{r}
@@ -20,6 +20,10 @@ vb1 <- vb %>%
   
 vb1 <- vb1 %>% 
   group_by(pointgroup) %>% 
+  mutate(hit.eff = (sum(kill.c)-sum(error.c))/n())
+
+vb2 <- vb1 %>% 
+  group_by(set) %>% 
   mutate(hit.eff = (sum(kill.c)-sum(error.c))/n())
 
 view(vb1)
@@ -63,7 +67,19 @@ summary(model1)
 
 model2 <- lm(hit.eff ~ set + points.position + points.total + oss + dig + result, data = vb1)
 summary(model2)
+
+model3 <- lm(hit.eff ~ points.position + points.total + oss + dig + result, data = vb2)
+summary(model2)
+
+# consider grouping the other predictors too
 ```
+
+```{r}
+library(tidymodels)
+
+```
+
+
 
 
 ```{r}
