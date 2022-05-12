@@ -1,0 +1,154 @@
+---
+title: "Untitled"
+output: pdf_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(mosaic)
+vb <- read_csv("Vb stats spring 2022 - Sheet1 (3).csv")
+View(vb)
+```
+
+```{r}
+serves.iar <- na.omit(vb %>% select(Date, Drill, Serves.iar))
+sr.iar <- na.omit(vb %>% select(Date, Drill, Serve.receive.iar))
+fb.iar <- na.omit(vb %>% select(Date, Drill, Free.ball.iar))
+kills.iar <- na.omit(vb %>% select(Date, Drill, Kills.iar))
+vb$order <- rep(1:473)
+points.iar <- na.omit(vb %>% select(Date, Drill, Points.iar, order))
+points.iar2 <- na.omit(vb %>% select(Points.iar, Set.won, order))
+points.iar <- points.iar %>% left_join(points.iar2, by="order") %>% select(-c(4,5)) %>% rename("Points.iar"="Points.iar.x")
+
+view(points.iar)
+view(serves.iar)
+```
+
+```{r}
+points.iar %>%
+  ggplot() +
+  geom_boxplot(aes(y=as.numeric(Points.iar), x=Date), size=2) + xlab("Score") + theme(text = element_text(size = 20))
+
+sr.iar %>% 
+  ggplot() +
+  geom_bar(aes(x=Serve.receive.iar)) + labs(title="Serve receive IAR")
+
+mean(points.iar$Points.iar)
+mean()
+
+kills.iar %>% 
+  ggplot()+
+  geom_violin(aes(x=Drill, y=Kills.iar))
+```
+
+
+# Tsunami effect
+
+```{r}
+ts <- vb %>% mutate(Set.won=ifelse(Set.won==1,"Win", "Loss"))
+box<-ts %>% 
+  mutate(tsunami=ifelse(Points.iar>2,1,0)) %>% 
+  group_by(Set.won) %>% 
+  summarize("tsunamis"=sum(tsunami))
+view(box)
+
+ts1 <- ts %>% mutate(tsunami = ifelse(Points.iar>2,1,0))
+view(ts1)
+
+
+t.test(x=ts$Points.iar, y=ts$Set.won, data=ts)
+t.test(Points.iar ~ Set.won, data=points.iar2) #if not normally distributed, t.test not as accurate. T.test likely to yield a p value that is lower or higher than what it should be?
+view(points.iar2)
+
+j <-  points.iar2 %>% filter(Set.won==1) %>% select(Points.iar)
+j1 <-  points.iar2 %>% filter(Set.won==0) %>% select(Points.iar)
+wilcox.test(x=j$Points.iar, y=j1$Points.iar, paired=F)
+t.test(x=j$Points.iar, y=j1$Points.iar, paired=F)
+
+#p<.05 -> significant difference in the avg number of points in a row between sets won vs sets lost (no surprise)
+
+j <-  ts1 %>% filter(Set.won=="Win") %>% select(tsunami)
+j1 <- ts1 %>% filter(Set.won=="Loss") %>% select(tsunami)
+wilcox.test(x=j$tsunami, y=j1$tsunami, paired=F)
+t.test(x=j$tsunami, y=j1$tsunami, paired=F)
+
+wins <- c(10,7,1)
+losses <- c(13,6,4)
+
+cols <- cbind(wins,losses)
+view(cols)
+
+chisq.test(cols) # tsunami effect: myth busted (with the data we have)
+```
+
+
+# Progress
+
+```{r}
+#points iar
+view(points.iar)
+
+mean.pts <- points.iar %>% group_by(Date) %>% summarise(mean=mean(Points.iar))
+
+mean.pts %>% 
+  ggplot() +
+  geom_col(aes(x=Date,y=mean))
+
+mean.pts <- points.iar %>% group_by(Date) %>% summarise(mean=mean(Points.iar))
+
+
+#serve receive iar
+view(sr.iar)
+
+mean.sr <- sr.iar %>% group_by(Date) %>% summarise(mean=mean(Serve.receive.iar))
+
+mean.sr %>% 
+  ggplot(aes(x=Date,y=mean)) +
+  geom_point() + geom_smooth(aes(group=1)) + ylab("Mean good (2/3) Serve Receive balls in a row") + theme(text = element_text(size = 15))
+
+
+#serve iar
+view(serves.iar)
+
+mean.serve <- serves.iar %>% group_by(Date) %>% summarise(mean=mean(Serves.iar))
+
+mean.serve %>% 
+  ggplot(aes(x=Date,y=mean)) +
+  geom_point() + geom_smooth(aes(group=1)) + ylab("Mean Serves in a row (before error)") + theme(text = element_text(size = 15))
+
+
+#kills iar
+view(kills.iar)
+
+mean.kills <- kills.iar %>% group_by(Date) %>% summarise(mean=mean(Kills.iar))
+
+mean.kills %>% 
+  ggplot(aes(x=Date,y=mean)) +
+  geom_point() + geom_smooth(aes(group=1)) + ylab("Mean kills in a row (both sides of court)") + theme(text = element_text(size = 15))
+
+
+#fbs iar
+view(fb.iar)
+
+mean.fb <- fb.iar %>% group_by(Date) %>% summarise(mean=mean(Free.ball.iar))
+
+mean.fb %>% 
+  ggplot(aes(x=Date,y=mean)) +
+  geom_point() + geom_smooth(aes(group=1)) + ylab("Mean good free balls passes in a row (both sides of court)") + theme(text = element_text(size = 15)) +ylim(0,30)
+```
+
+
+# Summary stats
+
+```{r}
+favstats(fb.iar$Free.ball.iar)
+
+favstats(sr.iar$Serve.receive.iar)
+
+favstats(serves.iar$Serves.iar)
+
+favstats(kills.iar$Kills.iar)
+```
+
